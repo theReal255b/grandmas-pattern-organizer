@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grandma's Pattern Organizer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Sewing Pattern Library</p>
+        <h1>Grandma's Pattern Organizer</h1>
+        <p class="hero-text">
+          Keep every quilt, sewing, embroidery, and crochet pattern in one easy place with photos,
+          sizes, yardage, and storage locations.
+        </p>
+      </div>
+      <button class="add-button" id="openAddModal" type="button" aria-label="Add a new pattern">
+        <span>+</span>
+        Add Pattern
+      </button>
+    </header>
+
+    <main>
+      <section class="controls-panel" aria-label="Search and filter patterns">
+        <label class="search-field">
+          <span class="field-label">Search</span>
+          <input
+            id="searchInput"
+            type="search"
+            placeholder="Search by name, type, or location"
+            autocomplete="off"
+          >
+        </label>
+
+        <label class="filter-field">
+          <span class="field-label">Category</span>
+          <select id="categoryFilter">
+            <option value="all">All categories</option>
+            <option value="quilt">Quilt</option>
+            <option value="sewing">Sewing</option>
+            <option value="embroidery">Embroidery</option>
+            <option value="crochet">Crochet</option>
+          </select>
+        </label>
+
+        <label class="filter-field">
+          <span class="field-label">Size</span>
+          <select id="sizeFilter">
+            <option value="all">All sizes</option>
+            <option value="small">Small</option>
+            <option value="medium">Medium</option>
+            <option value="large">Large</option>
+            <option value="twin">Twin</option>
+            <option value="full">Full</option>
+            <option value="queen">Queen</option>
+            <option value="king">King</option>
+          </select>
+        </label>
+
+        <label class="filter-field">
+          <span class="field-label">Location</span>
+          <select id="locationFilter">
+            <option value="all">All locations</option>
+          </select>
+        </label>
+      </section>
+
+      <section class="results-header">
+        <div>
+          <p class="section-label">Collection</p>
+          <h2>Your patterns</h2>
+          <p class="save-status" id="saveStatus">Patterns save on this device automatically.</p>
+        </div>
+        <p class="results-count" id="resultsCount">0 patterns</p>
+      </section>
+
+      <section id="patternGrid" class="pattern-grid" aria-live="polite"></section>
+    </main>
+  </div>
+
+  <div class="modal" id="addPatternModal" aria-hidden="true" role="dialog" aria-labelledby="addPatternTitle">
+    <div class="modal-backdrop" data-close-modal="addPatternModal"></div>
+    <div class="modal-card">
+      <button class="icon-button" type="button" data-close-modal="addPatternModal" aria-label="Close add pattern form">&times;</button>
+      <div class="modal-heading">
+        <p class="section-label">New Pattern</p>
+        <h3 id="addPatternTitle">Add a sewing pattern</h3>
+      </div>
+
+      <form id="patternForm" class="pattern-form">
+        <label class="form-field upload-field">
+          <span class="field-label">Pattern photo</span>
+          <input id="imageInput" type="file" accept="image/*">
+          <span class="helper-text">Upload a pattern photo for the thumbnail and full-size view.</span>
+        </label>
+
+        <div class="upload-preview" id="uploadPreview">
+          <div class="upload-placeholder">Photo preview will show here</div>
+        </div>
+
+        <label class="form-field">
+          <span class="field-label">Pattern name</span>
+          <input id="nameInput" type="text" placeholder="Grandma's Star Quilt" required>
+        </label>
+
+        <label class="form-field">
+          <span class="field-label">Length in yards</span>
+          <input id="yardsInput" type="number" min="0" step="0.25" placeholder="4.5" required>
+        </label>
+
+        <label class="form-field">
+          <span class="field-label">Size</span>
+          <select id="sizeInput" required>
+            <option value="" selected disabled>Choose a size</option>
+            <option value="small">Small</option>
+            <option value="medium">Medium</option>
+            <option value="large">Large</option>
+            <option value="twin">Twin</option>
+            <option value="full">Full</option>
+            <option value="queen">Queen</option>
+            <option value="king">King</option>
+          </select>
+        </label>
+
+        <label class="form-field">
+          <span class="field-label">Location</span>
+          <select id="locationInput" required>
+            <option value="" selected disabled>Choose a location</option>
+          </select>
+        </label>
+
+        <label class="form-field">
+          <span class="field-label">Type</span>
+          <select id="categoryInput" required>
+            <option value="" selected disabled>Choose a type</option>
+            <option value="quilt">Quilt</option>
+            <option value="sewing">Sewing</option>
+            <option value="embroidery">Embroidery</option>
+            <option value="crochet">Crochet</option>
+          </select>
+        </label>
+
+        <button class="submit-button" type="submit">Save Pattern</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal image-modal" id="imageModal" aria-hidden="true" role="dialog" aria-labelledby="imageModalTitle">
+    <div class="modal-backdrop" data-close-modal="imageModal"></div>
+    <div class="image-modal-card">
+      <button class="icon-button light" type="button" data-close-modal="imageModal" aria-label="Close full-size image">&times;</button>
+      <p class="visually-hidden" id="imageModalTitle">Pattern image preview</p>
+      <img id="fullImage" src="" alt="">
+    </div>
+  </div>
+
+  <template id="patternCardTemplate">
+    <article class="pattern-card">
+      <button class="image-frame" type="button">
+        <img class="pattern-image" alt="">
+        <span class="zoom-chip">Click to enlarge</span>
+      </button>
+      <div class="pattern-body">
+        <div class="pattern-topline">
+          <span class="pattern-badge"></span>
+          <span class="pattern-size"></span>
+        </div>
+        <h3 class="pattern-name"></h3>
+        <dl class="pattern-meta">
+          <div>
+            <dt>Yardage</dt>
+            <dd class="pattern-yards"></dd>
+          </div>
+          <div>
+            <dt>Location</dt>
+            <dd class="pattern-location"></dd>
+          </div>
+        </dl>
+        <button class="delete-button" type="button">Delete Pattern</button>
+      </div>
+    </article>
+  </template>
+
+  <script src="script.js"></script>
+</body>
+</html>
