@@ -21,15 +21,25 @@
   box-sizing: border-box;
 }
 
+html {
+  overflow-y: auto;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
   font-family: "Manrope", "Segoe UI", sans-serif;
   color: var(--text);
   background:
     radial-gradient(circle at top left, rgba(215, 139, 45, 0.3), transparent 34%),
     radial-gradient(circle at top right, rgba(111, 139, 111, 0.22), transparent 30%),
     linear-gradient(180deg, #f8f0e4 0%, #f4ead9 45%, #efe2cc 100%);
+}
+
+body.modal-open {
+  overflow: hidden;
 }
 
 body::before {
@@ -45,6 +55,8 @@ body::before {
 }
 
 .page-shell {
+  position: relative;
+  z-index: 0;
   width: min(1180px, calc(100% - 2rem));
   margin: 0 auto;
   padding: 2rem 0 4rem;
@@ -396,12 +408,15 @@ select:focus {
   position: fixed;
   inset: 0;
   display: none;
+  overflow-y: auto;
+  padding: 1rem 0;
   z-index: 30;
 }
 
 .modal.open {
   display: grid;
-  place-items: center;
+  justify-items: center;
+  align-items: start;
 }
 
 .modal-backdrop {
@@ -416,6 +431,7 @@ select:focus {
   position: relative;
   z-index: 1;
   width: min(720px, calc(100% - 1.5rem));
+  margin: 0 auto;
   max-height: calc(100vh - 2rem);
   overflow: auto;
   border-radius: 30px;
@@ -537,6 +553,7 @@ select:focus {
 
 .image-modal-card {
   width: min(980px, calc(100% - 1.5rem));
+  margin-top: 0;
   background: transparent;
   box-shadow: none;
 }

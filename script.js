@@ -223,11 +223,13 @@ function startEditPattern(patternId) {
 function openModal(modal) {
   modal.classList.add("open");
   modal.setAttribute("aria-hidden", "false");
+  syncBodyScrollLock();
 }
 
 function closeModal(modal) {
   modal.classList.remove("open");
   modal.setAttribute("aria-hidden", "true");
+  syncBodyScrollLock();
 
   if (modal === refs.addPatternModal) {
     resetFormState();
@@ -335,6 +337,14 @@ function renderUploadPreview(imageSource) {
   refs.uploadPreview.innerHTML = imageSource
     ? `<img src="${imageSource}" alt="Pattern upload preview">`
     : `<div class="upload-placeholder">Photo preview will show here</div>`;
+}
+
+function syncBodyScrollLock() {
+  const hasOpenModal =
+    refs.addPatternModal.classList.contains("open") ||
+    refs.imageModal.classList.contains("open");
+
+  document.body.classList.toggle("modal-open", hasOpenModal);
 }
 
 function trimYards(value) {
