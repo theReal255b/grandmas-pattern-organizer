@@ -166,6 +166,12 @@ h1 {
   gap: 0.45rem;
 }
 
+.size-fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
 .field-label {
   font-size: 0.82rem;
   font-weight: 800;
@@ -189,6 +195,30 @@ input:focus,
 select:focus {
   border-color: rgba(111, 139, 111, 0.75);
   box-shadow: 0 0 0 4px rgba(111, 139, 111, 0.16);
+}
+
+.size-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 0.65rem;
+}
+
+.size-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.88);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.size-option input {
+  width: auto;
+  margin: 0;
+  accent-color: var(--sage-deep);
 }
 
 .results-header {
@@ -286,7 +316,7 @@ select:focus {
 }
 
 .pattern-badge,
-.pattern-size {
+.pattern-size-summary {
   display: inline-flex;
   align-items: center;
   min-height: 2rem;
@@ -301,13 +331,20 @@ select:focus {
   color: var(--sage-deep);
 }
 
-.pattern-size {
+.pattern-size-summary {
   background: rgba(215, 139, 45, 0.14);
   color: #8f5b16;
 }
 
 .pattern-name {
   font-size: 1.3rem;
+}
+
+.pattern-sizes {
+  margin: -0.15rem 0 0;
+  color: var(--muted);
+  font-weight: 700;
+  line-height: 1.5;
 }
 
 .pattern-meta {
@@ -452,6 +489,13 @@ select:focus {
   box-shadow: 0 16px 34px rgba(184, 87, 59, 0.26);
 }
 
+.pattern-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7rem;
+}
+
+.edit-button,
 .delete-button {
   border: 1px solid rgba(184, 87, 59, 0.22);
   border-radius: 16px;
@@ -462,6 +506,12 @@ select:focus {
   font-weight: 800;
   cursor: pointer;
   transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
+}
+
+.edit-button {
+  background: rgba(111, 139, 111, 0.1);
+  border-color: rgba(111, 139, 111, 0.2);
+  color: var(--sage-deep);
 }
 
 .icon-button {
@@ -514,9 +564,16 @@ select:focus {
 
 .add-button:hover,
 .submit-button:hover,
+.edit-button:hover,
 .delete-button:hover,
 .icon-button:hover {
   transform: translateY(-1px);
+}
+
+.edit-button:hover,
+.edit-button:focus-visible {
+  background: rgba(111, 139, 111, 0.16);
+  border-color: rgba(111, 139, 111, 0.34);
 }
 
 .delete-button:hover,

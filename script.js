@@ -5,9 +5,12 @@ const locations = [
   ...Array.from({ length: 10 }, (_, index) => `Notebook ${index + 1}`),
 ];
 
+const sizeOptions = ["small", "medium", "large", "twin", "full", "queen", "king"];
+
 const state = {
   patterns: loadPatterns(),
   uploadedImage: "",
+  editingPatternId: null,
 };
 
 const refs = {
@@ -20,6 +23,8 @@ const refs = {
   locationFilter: document.getElementById("locationFilter"),
   openAddModal: document.getElementById("openAddModal"),
   addPatternModal: document.getElementById("addPatternModal"),
+  modalEyebrow: document.getElementById("modalEyebrow"),
+  addPatternTitle: document.getElementById("addPatternTitle"),
   imageModal: document.getElementById("imageModal"),
   fullImage: document.getElementById("fullImage"),
   patternForm: document.getElementById("patternForm"),
@@ -30,6 +35,7 @@ const refs = {
   sizeInput: document.getElementById("sizeInput"),
   locationInput: document.getElementById("locationInput"),
   categoryInput: document.getElementById("categoryInput"),
+  submitButton: document.getElementById("submitButton"),
   patternCardTemplate: document.getElementById("patternCardTemplate"),
 };
 
@@ -43,7 +49,7 @@ function bindEvents() {
   refs.categoryFilter.addEventListener("change", renderPatterns);
   refs.sizeFilter.addEventListener("change", renderPatterns);
   refs.locationFilter.addEventListener("change", renderPatterns);
-  refs.openAddModal.addEventListener("click", () => openModal(refs.addPatternModal));
+  refs.openAddModal.addEventListener("click", openNewPatternModal);
   refs.patternForm.addEventListener("submit", handlePatternSubmit);
   refs.imageInput.addEventListener("change", handleImageUpload);
 
@@ -65,25 +71,36 @@ function bindEvents() {
 function handlePatternSubmit(event) {
   event.preventDefault();
 
+  const selectedSizes = getSelectedSizes();
+
+  if (!selectedSizes.length) {
+    updateSaveStatus("Choose at least one size before saving.");
+    return;
+  }
+
+  const existingPattern = state.patterns.find((item) => item.id === state.editingPatternId);
   const pattern = {
-    id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+    id: existingPattern?.id || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
     name: refs.nameInput.value.trim(),
     yards: Number(refs.yardsInput.value),
-    size: refs.sizeInput.value,
+    sizes: selectedSizes,
     location: refs.locationInput.value,
     category: refs.categoryInput.value,
-    image: state.uploadedImage,
-    createdAt: Date.now(),
+    image: state.uploadedImage || existingPattern?.image || "",
+    createdAt: existingPattern?.createdAt || Date.now(),
   };
 
-  state.patterns.unshift(pattern);
+  if (existingPattern) {
+    state.patterns = state.patterns.map((item) => (item.id === existingPattern.id ? pattern : item));
+  } else {
+    state.patterns.unshift(pattern);
+  }
+
   persistPatterns();
-  refs.patternForm.reset();
-  state.uploadedImage = "";
-  resetUploadPreview();
+  resetFormState();
   closeModal(refs.addPatternModal);
   renderPatterns();
-  updateSaveStatus(`Saved "${pattern.name}" on this device.`);
+  updateSaveStatus(`${existingPattern ? "Updated" : "Saved"} "${pattern.name}" on this device.`);
 }
 
 function handleImageUpload(event) {
@@ -105,17 +122,20 @@ function handleImageUpload(event) {
 
 function renderPatterns() {
   const filteredPatterns = state.patterns.filter((pattern) => {
+    const patternSizes = getPatternSizes(pattern);
     const searchValue = refs.searchInput.value.trim().toLowerCase();
     const matchesSearch =
       !searchValue ||
       pattern.name.toLowerCase().includes(searchValue) ||
       pattern.category.toLowerCase().includes(searchValue) ||
-      pattern.location.toLowerCase().includes(searchValue);
+      pattern.location.toLowerCase().includes(searchValue) ||
+      patternSizes.some((size) => size.includes(searchValue));
 
     const matchesCategory =
       refs.categoryFilter.value === "all" || pattern.category === refs.categoryFilter.value;
 
-    const matchesSize = refs.sizeFilter.value === "all" || pattern.size === refs.sizeFilter.value;
+    const matchesSize =
+      refs.sizeFilter.value === "all" || patternSizes.includes(refs.sizeFilter.value);
     const matchesLocation =
       refs.locationFilter.value === "all" || pattern.location === refs.locationFilter.value;
 
@@ -131,6 +151,7 @@ function renderPatterns() {
   }
 
   filteredPatterns.forEach((pattern) => {
+    const patternSizes = getPatternSizes(pattern);
     const fragment = refs.patternCardTemplate.content.cloneNode(true);
     const imageButton = fragment.querySelector(".image-frame");
     const image = fragment.querySelector(".pattern-image");
@@ -140,10 +161,12 @@ function renderPatterns() {
     imageButton.addEventListener("click", () => openImagePreview(pattern));
 
     fragment.querySelector(".pattern-badge").textContent = titleCase(pattern.category);
-    fragment.querySelector(".pattern-size").textContent = titleCase(pattern.size);
+    fragment.querySelector(".pattern-size-summary").textContent = summarizeSizes(patternSizes);
     fragment.querySelector(".pattern-name").textContent = pattern.name;
+    fragment.querySelector(".pattern-sizes").textContent = `Sizes: ${patternSizes.map(titleCase).join(", ")}`;
     fragment.querySelector(".pattern-yards").textContent = `${trimYards(pattern.yards)} yards`;
     fragment.querySelector(".pattern-location").textContent = pattern.location;
+    fragment.querySelector(".edit-button").addEventListener("click", () => startEditPattern(pattern.id));
     fragment.querySelector(".delete-button").addEventListener("click", () => deletePattern(pattern.id));
 
     refs.patternGrid.append(fragment);
@@ -167,6 +190,36 @@ function openImagePreview(pattern) {
   openModal(refs.imageModal);
 }
 
+function openNewPatternModal() {
+  resetFormState();
+  refs.modalEyebrow.textContent = "New Pattern";
+  refs.addPatternTitle.textContent = "Add a sewing pattern";
+  refs.submitButton.textContent = "Save Pattern";
+  openModal(refs.addPatternModal);
+}
+
+function startEditPattern(patternId) {
+  const pattern = state.patterns.find((item) => item.id === patternId);
+
+  if (!pattern) {
+    return;
+  }
+
+  state.editingPatternId = pattern.id;
+  state.uploadedImage = pattern.image || "";
+  refs.patternForm.reset();
+  refs.nameInput.value = pattern.name;
+  refs.yardsInput.value = pattern.yards;
+  refs.locationInput.value = pattern.location;
+  refs.categoryInput.value = pattern.category;
+  setSelectedSizes(getPatternSizes(pattern));
+  refs.modalEyebrow.textContent = "Edit Pattern";
+  refs.addPatternTitle.textContent = "Update this sewing pattern";
+  refs.submitButton.textContent = "Save Changes";
+  renderUploadPreview(state.uploadedImage);
+  openModal(refs.addPatternModal);
+}
+
 function openModal(modal) {
   modal.classList.add("open");
   modal.setAttribute("aria-hidden", "false");
@@ -175,6 +228,10 @@ function openModal(modal) {
 function closeModal(modal) {
   modal.classList.remove("open");
   modal.setAttribute("aria-hidden", "true");
+
+  if (modal === refs.addPatternModal) {
+    resetFormState();
+  }
 }
 
 function populateLocationSelect(select, includeAllOption) {
@@ -185,7 +242,7 @@ function populateLocationSelect(select, includeAllOption) {
 }
 
 function resetUploadPreview() {
-  refs.uploadPreview.innerHTML = `<div class="upload-placeholder">Photo preview will show here</div>`;
+  renderUploadPreview("");
 }
 
 function persistPatterns() {
@@ -213,7 +270,7 @@ function deletePattern(patternId) {
 function loadPatterns() {
   try {
     const savedPatterns = localStorage.getItem(STORAGE_KEY);
-    return savedPatterns ? JSON.parse(savedPatterns) : [];
+    return savedPatterns ? JSON.parse(savedPatterns).map(normalizePattern) : [];
   } catch {
     return [];
   }
@@ -225,6 +282,59 @@ function updateSaveStatus(message) {
 
 function titleCase(value) {
   return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function getSelectedSizes() {
+  return Array.from(refs.sizeInput.querySelectorAll("input:checked")).map((input) => input.value);
+}
+
+function setSelectedSizes(sizes) {
+  const sizeSet = new Set(sizes);
+  refs.sizeInput.querySelectorAll("input").forEach((input) => {
+    input.checked = sizeSet.has(input.value);
+  });
+}
+
+function getPatternSizes(pattern) {
+  return Array.isArray(pattern.sizes) && pattern.sizes.length
+    ? pattern.sizes
+    : pattern.size
+      ? [pattern.size]
+      : [];
+}
+
+function summarizeSizes(sizes) {
+  if (sizes.length <= 2) {
+    return sizes.map(titleCase).join(", ");
+  }
+
+  return `${sizes.length} sizes`;
+}
+
+function normalizePattern(pattern) {
+  const sizes = getPatternSizes(pattern).filter((size) => sizeOptions.includes(size));
+
+  return {
+    ...pattern,
+    sizes,
+  };
+}
+
+function resetFormState() {
+  state.editingPatternId = null;
+  state.uploadedImage = "";
+  refs.patternForm.reset();
+  setSelectedSizes([]);
+  refs.modalEyebrow.textContent = "New Pattern";
+  refs.addPatternTitle.textContent = "Add a sewing pattern";
+  refs.submitButton.textContent = "Save Pattern";
+  resetUploadPreview();
+}
+
+function renderUploadPreview(imageSource) {
+  refs.uploadPreview.innerHTML = imageSource
+    ? `<img src="${imageSource}" alt="Pattern upload preview">`
+    : `<div class="upload-placeholder">Photo preview will show here</div>`;
 }
 
 function trimYards(value) {

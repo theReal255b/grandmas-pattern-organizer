@@ -89,7 +89,7 @@
     <div class="modal-card">
       <button class="icon-button" type="button" data-close-modal="addPatternModal" aria-label="Close add pattern form">&times;</button>
       <div class="modal-heading">
-        <p class="section-label">New Pattern</p>
+        <p class="section-label" id="modalEyebrow">New Pattern</p>
         <h3 id="addPatternTitle">Add a sewing pattern</h3>
       </div>
 
@@ -114,19 +114,19 @@
           <input id="yardsInput" type="number" min="0" step="0.25" placeholder="4.5" required>
         </label>
 
-        <label class="form-field">
-          <span class="field-label">Size</span>
-          <select id="sizeInput" required>
-            <option value="" selected disabled>Choose a size</option>
-            <option value="small">Small</option>
-            <option value="medium">Medium</option>
-            <option value="large">Large</option>
-            <option value="twin">Twin</option>
-            <option value="full">Full</option>
-            <option value="queen">Queen</option>
-            <option value="king">King</option>
-          </select>
-        </label>
+        <fieldset class="form-field size-fieldset">
+          <legend class="field-label">Sizes</legend>
+          <div class="size-grid" id="sizeInput">
+            <label class="size-option"><input type="checkbox" value="small"> <span>Small</span></label>
+            <label class="size-option"><input type="checkbox" value="medium"> <span>Medium</span></label>
+            <label class="size-option"><input type="checkbox" value="large"> <span>Large</span></label>
+            <label class="size-option"><input type="checkbox" value="twin"> <span>Twin</span></label>
+            <label class="size-option"><input type="checkbox" value="full"> <span>Full</span></label>
+            <label class="size-option"><input type="checkbox" value="queen"> <span>Queen</span></label>
+            <label class="size-option"><input type="checkbox" value="king"> <span>King</span></label>
+          </div>
+          <span class="helper-text">Choose one or more sizes for this pattern.</span>
+        </fieldset>
 
         <label class="form-field">
           <span class="field-label">Location</span>
@@ -146,7 +146,7 @@
           </select>
         </label>
 
-        <button class="submit-button" type="submit">Save Pattern</button>
+        <button class="submit-button" id="submitButton" type="submit">Save Pattern</button>
       </form>
     </div>
   </div>
@@ -169,9 +169,10 @@
       <div class="pattern-body">
         <div class="pattern-topline">
           <span class="pattern-badge"></span>
-          <span class="pattern-size"></span>
+          <span class="pattern-size-summary"></span>
         </div>
         <h3 class="pattern-name"></h3>
+        <p class="pattern-sizes"></p>
         <dl class="pattern-meta">
           <div>
             <dt>Yardage</dt>
@@ -182,7 +183,10 @@
             <dd class="pattern-location"></dd>
           </div>
         </dl>
-        <button class="delete-button" type="button">Delete Pattern</button>
+        <div class="pattern-actions">
+          <button class="edit-button" type="button">Edit Pattern</button>
+          <button class="delete-button" type="button">Delete Pattern</button>
+        </div>
       </div>
     </article>
   </template>
