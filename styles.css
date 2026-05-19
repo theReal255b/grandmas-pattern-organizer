@@ -184,6 +184,12 @@ h1 {
   padding: 0;
 }
 
+.fabric-fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
 .field-label {
   font-size: 0.82rem;
   font-weight: 800;
@@ -213,6 +219,12 @@ select:focus {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
   gap: 0.65rem;
+}
+
+.fabric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.8rem;
 }
 
 .size-option {
@@ -357,6 +369,27 @@ select:focus {
   color: var(--muted);
   font-weight: 700;
   line-height: 1.5;
+}
+
+.pattern-fabrics {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.pattern-fabric-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: 14px;
+  background: rgba(111, 139, 111, 0.08);
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.pattern-fabric-item strong {
+  color: var(--sage-deep);
 }
 
 .pattern-meta {

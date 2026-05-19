@@ -114,6 +114,25 @@
           <input id="yardsInput" type="number" min="0" step="0.25" placeholder="4.5" required>
         </label>
 
+        <fieldset class="form-field fabric-fieldset">
+          <legend class="field-label">Fabric requirements</legend>
+          <div class="fabric-grid">
+            <label class="form-field">
+              <span class="field-label">Main fabric</span>
+              <input id="mainFabricInput" type="number" min="0" step="0.25" placeholder="2.5">
+            </label>
+            <label class="form-field">
+              <span class="field-label">Secondary fabric</span>
+              <input id="secondaryFabricInput" type="number" min="0" step="0.25" placeholder="1.5">
+            </label>
+            <label class="form-field">
+              <span class="field-label">Accent fabric</span>
+              <input id="accentFabricInput" type="number" min="0" step="0.25" placeholder="0.5">
+            </label>
+          </div>
+          <span class="helper-text">Use these for patterns that need more than one fabric color or section.</span>
+        </fieldset>
+
         <fieldset class="form-field size-fieldset">
           <legend class="field-label">Sizes</legend>
           <div class="size-grid" id="sizeInput">
@@ -173,6 +192,7 @@
         </div>
         <h3 class="pattern-name"></h3>
         <p class="pattern-sizes"></p>
+        <div class="pattern-fabrics"></div>
         <dl class="pattern-meta">
           <div>
             <dt>Yardage</dt>

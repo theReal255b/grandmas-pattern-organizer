@@ -32,6 +32,9 @@ const refs = {
   uploadPreview: document.getElementById("uploadPreview"),
   nameInput: document.getElementById("nameInput"),
   yardsInput: document.getElementById("yardsInput"),
+  mainFabricInput: document.getElementById("mainFabricInput"),
+  secondaryFabricInput: document.getElementById("secondaryFabricInput"),
+  accentFabricInput: document.getElementById("accentFabricInput"),
   sizeInput: document.getElementById("sizeInput"),
   locationInput: document.getElementById("locationInput"),
   categoryInput: document.getElementById("categoryInput"),
@@ -83,6 +86,11 @@ function handlePatternSubmit(event) {
     id: existingPattern?.id || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
     name: refs.nameInput.value.trim(),
     yards: Number(refs.yardsInput.value),
+    fabrics: {
+      main: parseOptionalNumber(refs.mainFabricInput.value),
+      secondary: parseOptionalNumber(refs.secondaryFabricInput.value),
+      accent: parseOptionalNumber(refs.accentFabricInput.value),
+    },
     sizes: selectedSizes,
     location: refs.locationInput.value,
     category: refs.categoryInput.value,
@@ -152,6 +160,7 @@ function renderPatterns() {
 
   filteredPatterns.forEach((pattern) => {
     const patternSizes = getPatternSizes(pattern);
+    const fabricEntries = getFabricEntries(pattern);
     const fragment = refs.patternCardTemplate.content.cloneNode(true);
     const imageButton = fragment.querySelector(".image-frame");
     const image = fragment.querySelector(".pattern-image");
@@ -164,6 +173,7 @@ function renderPatterns() {
     fragment.querySelector(".pattern-size-summary").textContent = summarizeSizes(patternSizes);
     fragment.querySelector(".pattern-name").textContent = pattern.name;
     fragment.querySelector(".pattern-sizes").textContent = `Sizes: ${patternSizes.map(titleCase).join(", ")}`;
+    renderFabricList(fragment.querySelector(".pattern-fabrics"), fabricEntries);
     fragment.querySelector(".pattern-yards").textContent = `${trimYards(pattern.yards)} yards`;
     fragment.querySelector(".pattern-location").textContent = pattern.location;
     fragment.querySelector(".edit-button").addEventListener("click", () => startEditPattern(pattern.id));
@@ -210,6 +220,9 @@ function startEditPattern(patternId) {
   refs.patternForm.reset();
   refs.nameInput.value = pattern.name;
   refs.yardsInput.value = pattern.yards;
+  refs.mainFabricInput.value = pattern.fabrics.main ?? "";
+  refs.secondaryFabricInput.value = pattern.fabrics.secondary ?? "";
+  refs.accentFabricInput.value = pattern.fabrics.accent ?? "";
   refs.locationInput.value = pattern.location;
   refs.categoryInput.value = pattern.category;
   setSelectedSizes(getPatternSizes(pattern));
@@ -315,9 +328,15 @@ function summarizeSizes(sizes) {
 
 function normalizePattern(pattern) {
   const sizes = getPatternSizes(pattern).filter((size) => sizeOptions.includes(size));
+  const fabrics = {
+    main: parseOptionalNumber(pattern.fabrics?.main),
+    secondary: parseOptionalNumber(pattern.fabrics?.secondary),
+    accent: parseOptionalNumber(pattern.fabrics?.accent),
+  };
 
   return {
     ...pattern,
+    fabrics,
     sizes,
   };
 }
@@ -339,6 +358,22 @@ function renderUploadPreview(imageSource) {
     : `<div class="upload-placeholder">Photo preview will show here</div>`;
 }
 
+function renderFabricList(container, fabricEntries) {
+  if (!fabricEntries.length) {
+    container.innerHTML = "";
+    container.hidden = true;
+    return;
+  }
+
+  container.hidden = false;
+  container.innerHTML = fabricEntries
+    .map(
+      ([label, amount]) =>
+        `<div class="pattern-fabric-item"><strong>${label}</strong><span>${trimYards(amount)} yards</span></div>`,
+    )
+    .join("");
+}
+
 function syncBodyScrollLock() {
   const hasOpenModal =
     refs.addPatternModal.classList.contains("open") ||
@@ -349,6 +384,23 @@ function syncBodyScrollLock() {
 
 function trimYards(value) {
   return Number.isInteger(value) ? value.toString() : value.toFixed(2).replace(/\.?0+$/, "");
+}
+
+function parseOptionalNumber(value) {
+  if (value === "" || value === null || value === undefined) {
+    return null;
+  }
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function getFabricEntries(pattern) {
+  return [
+    ["Main fabric", pattern.fabrics?.main],
+    ["Secondary fabric", pattern.fabrics?.secondary],
+    ["Accent fabric", pattern.fabrics?.accent],
+  ].filter(([, amount]) => amount !== null && amount !== undefined && amount !== 0);
 }
 
 function createPlaceholderImage(category) {
