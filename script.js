@@ -6,6 +6,13 @@ const locations = [
 ];
 
 const sizeOptions = ["small", "medium", "large", "twin", "full", "queen", "king"];
+const fabricFieldLabels = [
+  ["fabric1", "Fabric 1"],
+  ["fabric2", "Fabric 2"],
+  ["coordinating", "Coordinating"],
+  ["lining", "Lining"],
+  ["interfacing", "Interfacing"],
+];
 
 const state = {
   patterns: loadPatterns(),
@@ -31,10 +38,12 @@ const refs = {
   imageInput: document.getElementById("imageInput"),
   uploadPreview: document.getElementById("uploadPreview"),
   nameInput: document.getElementById("nameInput"),
-  yardsInput: document.getElementById("yardsInput"),
-  mainFabricInput: document.getElementById("mainFabricInput"),
-  secondaryFabricInput: document.getElementById("secondaryFabricInput"),
-  accentFabricInput: document.getElementById("accentFabricInput"),
+  lengthInput: document.getElementById("lengthInput"),
+  fabric1Input: document.getElementById("fabric1Input"),
+  fabric2Input: document.getElementById("fabric2Input"),
+  coordinatingInput: document.getElementById("coordinatingInput"),
+  liningInput: document.getElementById("liningInput"),
+  interfacingInput: document.getElementById("interfacingInput"),
   sizeInput: document.getElementById("sizeInput"),
   locationInput: document.getElementById("locationInput"),
   categoryInput: document.getElementById("categoryInput"),
@@ -85,11 +94,13 @@ function handlePatternSubmit(event) {
   const pattern = {
     id: existingPattern?.id || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
     name: refs.nameInput.value.trim(),
-    yards: Number(refs.yardsInput.value),
+    length: refs.lengthInput.value.trim(),
     fabrics: {
-      main: parseOptionalNumber(refs.mainFabricInput.value),
-      secondary: parseOptionalNumber(refs.secondaryFabricInput.value),
-      accent: parseOptionalNumber(refs.accentFabricInput.value),
+      fabric1: parseOptionalText(refs.fabric1Input.value),
+      fabric2: parseOptionalText(refs.fabric2Input.value),
+      coordinating: parseOptionalText(refs.coordinatingInput.value),
+      lining: parseOptionalText(refs.liningInput.value),
+      interfacing: parseOptionalText(refs.interfacingInput.value),
     },
     sizes: selectedSizes,
     location: refs.locationInput.value,
@@ -137,6 +148,10 @@ function renderPatterns() {
       pattern.name.toLowerCase().includes(searchValue) ||
       pattern.category.toLowerCase().includes(searchValue) ||
       pattern.location.toLowerCase().includes(searchValue) ||
+      pattern.length.toLowerCase().includes(searchValue) ||
+      getFabricEntries(pattern).some(([label, amount]) =>
+        `${label} ${amount}`.toLowerCase().includes(searchValue),
+      ) ||
       patternSizes.some((size) => size.includes(searchValue));
 
     const matchesCategory =
@@ -174,7 +189,7 @@ function renderPatterns() {
     fragment.querySelector(".pattern-name").textContent = pattern.name;
     fragment.querySelector(".pattern-sizes").textContent = `Sizes: ${patternSizes.map(titleCase).join(", ")}`;
     renderFabricList(fragment.querySelector(".pattern-fabrics"), fabricEntries);
-    fragment.querySelector(".pattern-yards").textContent = `${trimYards(pattern.yards)} yards`;
+    fragment.querySelector(".pattern-length").textContent = pattern.length;
     fragment.querySelector(".pattern-location").textContent = pattern.location;
     fragment.querySelector(".edit-button").addEventListener("click", () => startEditPattern(pattern.id));
     fragment.querySelector(".delete-button").addEventListener("click", () => deletePattern(pattern.id));
@@ -219,10 +234,12 @@ function startEditPattern(patternId) {
   state.uploadedImage = pattern.image || "";
   refs.patternForm.reset();
   refs.nameInput.value = pattern.name;
-  refs.yardsInput.value = pattern.yards;
-  refs.mainFabricInput.value = pattern.fabrics.main ?? "";
-  refs.secondaryFabricInput.value = pattern.fabrics.secondary ?? "";
-  refs.accentFabricInput.value = pattern.fabrics.accent ?? "";
+  refs.lengthInput.value = pattern.length;
+  refs.fabric1Input.value = pattern.fabrics.fabric1 ?? "";
+  refs.fabric2Input.value = pattern.fabrics.fabric2 ?? "";
+  refs.coordinatingInput.value = pattern.fabrics.coordinating ?? "";
+  refs.liningInput.value = pattern.fabrics.lining ?? "";
+  refs.interfacingInput.value = pattern.fabrics.interfacing ?? "";
   refs.locationInput.value = pattern.location;
   refs.categoryInput.value = pattern.category;
   setSelectedSizes(getPatternSizes(pattern));
@@ -328,15 +345,19 @@ function summarizeSizes(sizes) {
 
 function normalizePattern(pattern) {
   const sizes = getPatternSizes(pattern).filter((size) => sizeOptions.includes(size));
+  const legacyFabrics = pattern.fabrics || {};
   const fabrics = {
-    main: parseOptionalNumber(pattern.fabrics?.main),
-    secondary: parseOptionalNumber(pattern.fabrics?.secondary),
-    accent: parseOptionalNumber(pattern.fabrics?.accent),
+    fabric1: parseOptionalText(legacyFabrics.fabric1 ?? legacyFabrics.main),
+    fabric2: parseOptionalText(legacyFabrics.fabric2 ?? legacyFabrics.secondary),
+    coordinating: parseOptionalText(legacyFabrics.coordinating ?? legacyFabrics.accent),
+    lining: parseOptionalText(legacyFabrics.lining),
+    interfacing: parseOptionalText(legacyFabrics.interfacing),
   };
 
   return {
     ...pattern,
     fabrics,
+    length: normalizeLength(pattern),
     sizes,
   };
 }
@@ -369,7 +390,7 @@ function renderFabricList(container, fabricEntries) {
   container.innerHTML = fabricEntries
     .map(
       ([label, amount]) =>
-        `<div class="pattern-fabric-item"><strong>${label}</strong><span>${trimYards(amount)} yards</span></div>`,
+        `<div class="pattern-fabric-item"><strong>${label}</strong><span>${amount}</span></div>`,
     )
     .join("");
 }
@@ -382,25 +403,39 @@ function syncBodyScrollLock() {
   document.body.classList.toggle("modal-open", hasOpenModal);
 }
 
-function trimYards(value) {
-  return Number.isInteger(value) ? value.toString() : value.toFixed(2).replace(/\.?0+$/, "");
-}
-
-function parseOptionalNumber(value) {
+function parseOptionalText(value) {
   if (value === "" || value === null || value === undefined) {
     return null;
   }
 
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : null;
+  return String(value).trim() || null;
 }
 
 function getFabricEntries(pattern) {
-  return [
-    ["Main fabric", pattern.fabrics?.main],
-    ["Secondary fabric", pattern.fabrics?.secondary],
-    ["Accent fabric", pattern.fabrics?.accent],
-  ].filter(([, amount]) => amount !== null && amount !== undefined && amount !== 0);
+  return fabricFieldLabels
+    .map(([key, label]) => [label, pattern.fabrics?.[key]])
+    .filter(([, amount]) => amount !== null && amount !== undefined && amount !== "");
+}
+
+function normalizeLength(pattern) {
+  if (pattern.length) {
+    return String(pattern.length).trim();
+  }
+
+  if (pattern.yards !== null && pattern.yards !== undefined && pattern.yards !== "") {
+    return `${formatLegacyNumber(pattern.yards)} yards`;
+  }
+
+  return "";
+}
+
+function formatLegacyNumber(value) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    return String(value).trim();
+  }
+
+  return Number.isInteger(parsed) ? parsed.toString() : parsed.toFixed(2).replace(/\.?0+$/, "");
 }
 
 function createPlaceholderImage(category) {
